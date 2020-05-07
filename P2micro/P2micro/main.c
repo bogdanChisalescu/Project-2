@@ -15,9 +15,9 @@ int main(void)
     while (1) 
     {
 		PORTC = 0xFF; //Make all pins on port C 5V
-		_delay_ms(1000); //Wait for 1 second
+		_delay_ms(300); //Wait for 1 second
 		PORTC = 0x00; //Make all pins on port C 0V
-		_delay_ms(1000); //Wait again for 1 second
+		_delay_ms(300); //Wait again for 1 second
     }
 }
 
