@@ -1,18 +1,8 @@
 #include <avr/io.h>
 #include <util/delay.h>
+#define fOSC 1000000
 
-void USART_Init( unsigned int baud )
-{
-	/* Set baud rate */
-	UBRR0H = (unsigned char)(baud>>8);
-	UBRR0L = (unsigned char)baud;
-	/* Enable receiver and transmitter */
-	UCSR0B = (1<<RXEN0)|(1<<TXEN0);
-	/* Set frame format: 8data, 2stop bit */
-	UCSR0C = (1<<USBS0)|(3<<UCSZ00);
-}
-
-void USART_Transmit( unsigned int data )
+void USART_Transmit(char data )
 {
 	/* Wait for empty transmit buffer */
 	while ( !( UCSR0A & (1<<UDRE0)) )
@@ -24,20 +14,29 @@ void USART_Transmit( unsigned int data )
 
 int main(void)
 {
+
+	//UCSR0B - resgistrul de stare si control USART B
+	//Activeaza transmisia setand bitul 3  
+	UCSR0B = 0x08;
 	
-	USART_Init(9600);
-    //DDRD -  Port D Data Direction Register
-	//for each port pin, 1 = write, 0 = read
-	//DDRD = 0x01; //Set PORTD, pin 0 as output
-	unsigned int value = 0;
+	//UCSR0C - resgistrul de stare si control USART C
+	//Valoarea actuala seteaza modul asincron, verificarea paritatii dezactivata,
+	//1 bit de stop, impreuna cu bitul 2 din UCSR0B 8 biti de date si ceasul pentru
+	//comunicatia sincrona dezactivat (fiind activa cea asincrona)
+	UCSR0C = 0x06;
+	
+	//Seteaza baud rate pentru o frecventa de 1MHz a ceasului
+	unsigned int BAUD = 9600;
+	BAUD = BAUD << 8;
+	UBRR0 = fOSC / BAUD - 1;
+ 
+	char character = 'a';
     while (1) 
     {
-		USART_Transmit(value);
-		//PORTD = 0x01; //Make pin 0 on port D 5V
-		//_delay_ms(300); //Wait for 1 second
-		//PORTD = 0x00; //Make all pins on port D 0V
-		_delay_ms(1000); //Wait again for 1 second
-		++value;
+		USART_Transmit(character);
+		USART_Transmit('\n');
+		_delay_ms(2000); //Wait for 2 seconds
+		++character;
     }
 }
 
