@@ -1,8 +1,8 @@
 #include <avr/io.h>
 #include <util/delay.h>
-#define fOSC 1000000
-
-void USART_Transmit(char data )
+#define BAUD 4800
+#define MYUBRR F_CPU/16/BAUD-1
+void USART_Transmit( unsigned char data )
 {
 	/* Wait for empty transmit buffer */
 	while ( !( UCSR0A & (1<<UDRE0)) )
@@ -10,33 +10,38 @@ void USART_Transmit(char data )
 	/* Put data into buffer, sends the data */
 	UDR0 = data;
 }
+void USART_Init( unsigned int baud )
+{
+	/* Set baud rate */
+	UBRR0H = (unsigned char)(baud>>8);
+	UBRR0L = (unsigned char)baud;
+	/* Enable receiver and transmitter */
+	UCSR0B = (1<<RXEN0)|(1<<TXEN0);
+	/* Set frame format: 8data, 2stop bit */
+	UCSR0C = (1<<USBS0)|(3<<UCSZ00);
+}
 
+unsigned char USART_Receive( void )
+{
+	/* Wait for data to be received */
+	while ( !(UCSR0A & (1<<RXC0)) )
+	;
+	/* Get and return received data from buffer */
+	return UDR0;
+}
 
 int main(void)
 {
-
-	//UCSR0B - resgistrul de stare si control USART B
-	//Activeaza transmisia setand bitul 3  
-	UCSR0B = 0x08;
+	USART_Init ( MYUBRR );
 	
-	//UCSR0C - resgistrul de stare si control USART C
-	//Valoarea actuala seteaza modul asincron, verificarea paritatii dezactivata,
-	//1 bit de stop, impreuna cu bitul 2 din UCSR0B 8 biti de date si ceasul pentru
-	//comunicatia sincrona dezactivat (fiind activa cea asincrona)
-	UCSR0C = 0x06;
+	unsigned char c = 'a';
 	
-	//Seteaza baud rate pentru o frecventa de 1MHz a ceasului
-	unsigned int BAUD = 9600;
-	BAUD = BAUD << 8;
-	UBRR0 = fOSC / BAUD - 1;
- 
-	char character = 'a';
     while (1) 
     {
-		USART_Transmit(character);
+		USART_Transmit(c);
 		USART_Transmit('\n');
-		_delay_ms(2000); //Wait for 2 seconds
-		++character;
+		++c;
+		_delay_ms(2000);
     }
 }
 
