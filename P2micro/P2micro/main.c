@@ -2,6 +2,28 @@
 #include <util/delay.h>
 #define BAUD 4800
 #define MYUBRR F_CPU/16/BAUD-1
+
+void ADC_Init()
+{
+	//Selecteaza Vref ca AVCC, rezultatul ajustat la dreapta
+	//si canalul analog de intrare ca ADC0
+	ADMUX = 0x40;
+	
+	//Activeaza ADC, selecteaza intreruperile si 
+	//defineste frecventa de lucru a ADC la XTAL/2
+	ADCSRA = 0x80;
+}
+
+void Conversie(char *lower, char *higher)
+{
+	ADCSRA = (ADCSRA | (1 << 6)); //Porneste o conversie setand ADSC
+	while( (ADCSRA | (0xBF)) != (0xBF) )  ; //Asteapta sa se termine conversia (ADSC resetat de hw)
+	*lower = ADCL; //Citeste LSBits
+	*higher = ADCH; //Citeste MSBits
+	
+}
+
+
 void USART_Transmit( unsigned char data )
 {
 	/* Wait for empty transmit buffer */
@@ -32,15 +54,19 @@ unsigned char USART_Receive( void )
 
 int main(void)
 {
+	//Initializare USART
 	USART_Init ( MYUBRR );
 	
-	unsigned char c = 'a';
+	//Initializare ADC
+	ADC_Init();	
+
+	char low, high;
 	
     while (1) 
     {
-		USART_Transmit(c);
-		USART_Transmit('\n');
-		++c;
+		Conversie(&low, &high);
+		USART_Transmit(low);
+		USART_Transmit(high);
 		_delay_ms(2000);
     }
 }
