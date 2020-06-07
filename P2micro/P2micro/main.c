@@ -60,14 +60,13 @@ int main(void)
 	//Initializare ADC
 	ADC_Init();	
 
-	char low, high;
+	//char low, high;
+	
+	DDRD = 0xFF;
 	
     while (1) 
     {
-		Conversie(&low, &high);
-		USART_Transmit(low);
-		USART_Transmit(high);
-		_delay_ms(2000);
+		PORTD = 0x40;		
     }
 }
 
