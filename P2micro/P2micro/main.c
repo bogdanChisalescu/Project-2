@@ -1,5 +1,7 @@
+#define F_CPU 1000000UL
 #include <avr/io.h>
 #include <util/delay.h>
+#include <stdint.h>
 #define BAUD 4800
 #define MYUBRR F_CPU/16/BAUD-1
 
@@ -7,14 +9,14 @@ void ADC_Init()
 {
 	//Selecteaza Vref ca AVCC, rezultatul ajustat la dreapta
 	//si canalul analog de intrare ca ADC0
-	ADMUX = 0x40;
+	ADMUX = 0x00;
 	
 	//Activeaza ADC, selecteaza intreruperile si 
 	//defineste frecventa de lucru a ADC la XTAL/2
 	ADCSRA = 0x80;
 }
 
-void Conversie(char *lower, char *higher)
+void Conversie(unsigned char *lower, unsigned char *higher)
 {
 	ADCSRA = (ADCSRA | (1 << 6)); //Porneste o conversie setand ADSC
 	while( (ADCSRA | (0xBF)) != (0xBF) )  ; //Asteapta sa se termine conversia (ADSC resetat de hw)
@@ -24,7 +26,7 @@ void Conversie(char *lower, char *higher)
 }
 
 
-void USART_Transmit( unsigned char data )
+void USART_Transmit( int data )
 {
 	/* Wait for empty transmit buffer */
 	while ( !( UCSR0A & (1<<UDRE0)) )
@@ -32,6 +34,8 @@ void USART_Transmit( unsigned char data )
 	/* Put data into buffer, sends the data */
 	UDR0 = data;
 }
+
+
 void USART_Init( unsigned int baud )
 {
 	/* Set baud rate */
@@ -58,15 +62,18 @@ int main(void)
 	USART_Init ( MYUBRR );
 	
 	//Initializare ADC
-	ADC_Init();	
+	//ADC_Init();	
 
-	//char low, high;
-	
+	//uint8_t low, high;
+	//int value;
 	DDRD = 0xFF;
 	
     while (1) 
     {
-		PORTD = 0x40;		
+		PORTD = 0xFF;
+		_delay_ms(2000);
+		PORTD = 0x00;
+		_delay_ms(2000);
     }
 }
 
